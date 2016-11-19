@@ -58,16 +58,16 @@ EOF
 cat <<EOF >/etc/modules-load.d/aoe.conf
 aoe
 EOF
-cat <<EOF >/etc/modules-load.d/tcmu.conf
-tcmu
-EOF
+#cat <<EOF >/etc/modules-load.d/tcmu.conf
+#tcmu
+#EOF
 
 systemctl restart systemd-modules-load
 systemctl enable systemd-modules-load
 
 IPADDR=`hostname -I | cut -f1 -d' '`
 HOSTNAME=`hostname -f`
-echo "${IPADDR}	${HOSTNAME} >> /etc/hosts
+echo "${IPADDR}	${HOSTNAME}" >> /etc/hosts
 
 # end
 SCRIPT_ROOT
