@@ -86,3 +86,9 @@ for SERVICES in kube-proxy kubelet docker; do
     systemctl restart $SERVICES
     systemctl enable $SERVICES
 done
+
+
+### torus flexvolume plugin ###
+mkdir -p /usr/libexec/kubernetes/kubelet-plugins/volume/exec/coreos.com~torus/
+cp /home/vagrant/work/src/github.com/coreos/torus/bin/torusblk /usr/libexec/kubernetes/kubelet-plugins/volume/exec/coreos.com~torus/torus
+systemctl restart kubelet
