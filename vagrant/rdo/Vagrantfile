@@ -1,0 +1,30 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$script = <<SCRIPT
+
+yum install -y https://www.rdoproject.org/repos/rdo-release.rpm
+yum update -y
+yum install -y openstack-packstack
+sed -i "s/^enabled=1/enabled=0/g" /etc/yum.repos.d/rdo-release.repo
+IPADDR=`hostname -I | cut -f1 -d' '`
+HOSTNAME=`hostname -f`
+echo "${IPADDR} ${HOSTNAME}" >> /etc/hosts
+packstack --install-hosts=${IPADDR}
+# end
+SCRIPT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+  config.vm.network "public_network", :bridge => 'enp0s25', :dev => 'enp0s25'
+
+  config.vm.provider "libvirt" do |vb|
+    vb.driver = "kvm"
+    vb.memory = "8192"
+  end
+  config.vm.define :rdo do | rdo |
+    config.vm.hostname = "rdo"
+  end
+
+  config.vm.provision "shell", inline: $script, privileged: true
+end
