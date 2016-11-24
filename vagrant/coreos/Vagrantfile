@@ -1,0 +1,34 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$rscript = <<RSCRIPT
+
+IPADDR=`hostname -i`
+HOSTNAME=`hostname -f`
+echo "${IPADDR} ${HOSTNAME}" >> /etc/hosts
+update_engine_client -update
+# end
+RSCRIPT
+
+$script = <<SCRIPT
+IPADDR=`hostname -i`
+HOSTNAME=`hostname -f`
+
+
+# end
+SCRIPT
+
+Vagrant.configure(2) do |config|
+  # always use Vagrants insecure key
+  config.ssh.insert_key = false
+  # forward ssh agent to easily ssh into the different machines
+  config.ssh.forward_agent = true
+
+  config.vm.box = "dongsupark/coreos-stable"
+  config.vm.network "public_network", :bridge => 'enp0s25', :dev => 'enp0s25'
+  config.vm.define :coreos do | coreos |
+    config.vm.hostname = "coreos1"
+  end
+  config.vm.provision "shell", inline: $script, privileged: false
+  config.vm.provision "shell", inline: $rscript, privileged: true
+end
