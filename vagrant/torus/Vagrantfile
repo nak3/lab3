@@ -58,9 +58,9 @@ EOF
 cat <<EOF >/etc/modules-load.d/aoe.conf
 aoe
 EOF
-#cat <<EOF >/etc/modules-load.d/tcmu.conf
-#tcmu
-#EOF
+cat <<EOF >/etc/modules-load.d/target_core_user.conf
+target_core_user
+EOF
 
 systemctl restart systemd-modules-load
 systemctl enable systemd-modules-load
@@ -73,7 +73,7 @@ echo "${IPADDR}	${HOSTNAME}" >> /etc/hosts
 SCRIPT_ROOT
 
 Vagrant.configure(2) do |config|
-  config.vm.box = "fedora/24-cloud-base"
+  config.vm.box = "fedora/25-cloud-base"
   config.vm.provision "shell", inline: $script, privileged: false
   config.vm.provision "shell", inline: $script_root, privileged: true
   config.vm.provision "docker" # Just install it
