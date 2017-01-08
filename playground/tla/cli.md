@@ -20,8 +20,8 @@ Here is my configuration example.
 ~~~
 DOWNLOAD="$HOME/tools/tla/tla"
 unzip -d $DOWNLOAD/tools/tla
-alias tlc='java -Xmx512m -cp /home/knakayam/tools/tla/tla tlc2.TLC -workers 2'
-alias tlasany='java -Xmx512m -cp /home/knakayam/tools/tla/tla tla2sany.SANY'
+alias tlc='java -Xmx512m -cp $HOME/tools/tla/tla tlc2.TLC -workers 2'
+alias tlasany='java -Xmx512m -cp $HOME/tools/tla/tla tla2sany.SANY'
 ~~~
 
 Now, you can execute sany check and TLC via `tlc` and `tlasany`.
