@@ -1,0 +1,102 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$script = <<SCRIPT
+#yum update -y
+IPADDR=`hostname -I | cut -f1 -d' '`
+HOSTNAME=`hostname -f`
+echo "${IPADDR} ${HOSTNAME}" >> /etc/hosts
+
+yum -y install vim-enhanced
+
+yum install -y chrony
+systemctl enable chronyd
+systemctl start chronyd
+
+setenforce 0
+sed -i.bak "/SELINUX/s/enforcing/disabled/g" /etc/selinux/config
+#systemctl stop firewalld
+#systemctl disable firewalld
+firewall-cmd --zone=public --add-port=6789/tcp --permanent
+
+#rpm -ivh https://ceph.com/rpm-hammer/el7/noarch/ceph-release-1-1.el7.noarch.rpm
+yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+cat <<EOF >/etc/yum.repos.d/ceph-deploy.repo
+[ceph-noarch]
+name=Ceph noarch packages
+baseurl=https://download.ceph.com/rpm-jewel/el7/noarch
+enabled=1
+gpgcheck=1
+type=rpm-md
+gpgkey=https://download.ceph.com/keys/release.asc
+EOF
+
+yum install -y ceph-deploy
+#yum erase ceph-release-1-1.el7.noarch -y
+
+export IPADDR=`hostname -I | cut -f1 -d' '`
+export HOSTNAME=`hostname -f`
+
+echo "${IPADDR} ${HOSTNAME}" >> /etc/hosts
+
+
+mkdir /var/local/osd0
+mkdir /var/local/osd1
+
+mkfs.xfs /dev/vdb
+mkfs.xfs /dev/vdc
+
+echo "/dev/vdb /var/local/osd0                    xfs    defaults        0 0" >> /etc/fstab
+echo "/dev/vdc /var/local/osd1                    xfs    defaults        0 0" >> /etc/fstab
+
+mount -a
+
+cd
+mkdir my-cluster
+cd my-cluster
+ceph-deploy new ${HOSTNAME}
+echo "osd pool default size = 2" >> ceph.conf
+echo "osd crush chooseleaf type = 0" >> ceph.conf
+echo "rbd default features = 3" >> ceph.conf
+
+chown -R ceph:ceph /var/local/osd0
+chown -R ceph:ceph /var/local/osd1
+
+ceph-deploy install ${HOSTNAME}
+ceph-deploy mon create-initial
+
+ceph-deploy osd prepare ${HOSTNAME}:/var/local/osd0 ${HOSTNAME}:/var/local/osd1
+ceph-deploy osd activate ${HOSTNAME}:/var/local/osd0 ${HOSTNAME}:/var/local/osd1
+
+ceph-deploy admin ${HOSTNAME}
+chmod +r /etc/ceph/ceph.client.admin.keyring
+
+## NOTE: without --image-feature layering doens't work on Centos7.
+rbd create ${HOSTNAME} --size 102400 --image-feature layering
+rbd map ${HOSTNAME}
+SCRIPT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+  config.vm.network "public_network", :bridge => 'enp0s25', :dev => 'enp0s25'
+
+  config.vm.provider "libvirt" do |vb|
+    vb.driver = "kvm"
+    vb.memory = "8192"
+    vb.storage :file,
+#      :path => '',		# automatically chosen if unspecified!
+      :device => 'vdb',	# automatically chosen if unspecified!
+      :size => '3G',		# defaults to 10G if unspecified!
+      :type => 'qcow2'		# defaults to 'qcow2' if unspecified!
+    vb.storage :file,
+#      :path => '',		# automatically chosen if unspecified!
+      :device => 'vdc',	# automatically chosen if unspecified!
+      :size => '3G',		# defaults to 10G if unspecified!
+      :type => 'qcow2'		# defaults to 'qcow2' if unspecified!
+  end
+  config.vm.define :ceph0 do | ceph |
+    config.vm.hostname = "ceph0"
+  end
+  config.vm.provision "shell", inline: $script, privileged: true
+#  config.vm.provision "shell", inline: $scriptv, privileged: false
+end
