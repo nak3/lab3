@@ -1,0 +1,48 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$script = <<SCRIPT
+#yum update -y
+IPADDR=`hostname -I | cut -f1 -d' '`
+HOSTNAME=`hostname -f`
+echo "${IPADDR} ${HOSTNAME}" >> /etc/hosts
+
+yum -y install vim-enhanced java
+yum install -y chrony
+systemctl enable chronyd
+systemctl start chronyd
+
+yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+cat <<EOF >/etc/yum.repos.d/datastax.repo
+[datastax]
+name = DataStax Repo for Apache Cassandra
+baseurl = http://rpm.datastax.com/community
+enabled = 1
+gpgcheck = 0
+EOF
+
+yum -y install dsc20
+systemctl start cassandra
+systemctl enable cassandra
+
+export IPADDR=`hostname -I | cut -f1 -d' '`
+export HOSTNAME=`hostname -f`
+
+echo "${IPADDR} ${HOSTNAME}" >> /etc/hosts
+
+SCRIPT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+  config.vm.network "public_network", :bridge => 'enp0s25', :dev => 'enp0s25'
+
+  config.vm.provider "libvirt" do |vb|
+    vb.driver = "kvm"
+    vb.memory = "8192"
+  end
+  config.vm.define :cassandra do | cassandra |
+    config.vm.hostname = "cassandra"
+  end
+  config.vm.provision "shell", inline: $script, privileged: true
+#  config.vm.provision "shell", inline: $scriptv, privileged: false
+end
