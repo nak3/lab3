@@ -21,7 +21,7 @@ enabled = 1
 gpgcheck = 0
 EOF
 
-yum -y install dsc20
+yum -y install dsc30 cassandra30-tools
 systemctl start cassandra
 systemctl enable cassandra
 
