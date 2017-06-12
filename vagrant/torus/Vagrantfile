@@ -26,7 +26,7 @@ alias cdtorus="cd $GOPATH/src/github.com/coreos/torus"
 EOF
 
 #sudo yum -y update
-sudo yum install -y unzip curl wget vim-enhanced golang git make docker rkt systemd-container nbd.x86_64 strace lsof psmisc kernel-modules kernel-modules-extra aoetools
+sudo yum install -y unzip curl wget vim-minimal golang git make docker rkt systemd-container nbd.x86_64 strace lsof psmisc kernel-modules kernel-modules-extra aoetools perf
 
 # Build and install tours
 git clone https://github.com/nak3/torus.git $GOPATH/src/github.com/coreos/torus
@@ -69,6 +69,8 @@ IPADDR=`hostname -I | cut -f1 -d' '`
 HOSTNAME=`hostname -f`
 echo "${IPADDR}	${HOSTNAME}" >> /etc/hosts
 
+yum -y erase vim-minimal
+yum -y install sudo vim-enhanced
 # end
 SCRIPT_ROOT
 
