@@ -28,12 +28,16 @@ EOF
 #sudo yum -y update
 sudo yum install -y unzip curl wget vim-minimal golang git make docker rkt systemd-container nbd.x86_64 strace lsof psmisc kernel-modules kernel-modules-extra aoetools perf
 
+# use golang 1.8
+sudo dnf install fedora-repos-rawhide
+sudo dnf --enablerepo=rawhide update golang
+
 # Build and install tours
 git clone https://github.com/nak3/torus.git $GOPATH/src/github.com/coreos/torus
 cd $GOPATH/src/github.com/coreos/torus
 make
-./bin/torusctl config -C 192.168.121.1:2379
-sudo ./bin/torusctl config -C 192.168.121.1:2379
+./bin/torusctl config -C http://192.168.121.1:2379
+sudo ./bin/torusctl config -C http://192.168.121.1:2379
 
 ./bin/torusctl completion >  /tmp/torusctl
 ./bin/torusblk completion >  /tmp/torusblk
