@@ -1,0 +1,3 @@
+
+azure vm quick-create -M ~/.ssh/id_rsa.pub --location southeastasia -g test -n centos73-01 -Q OpenLogic:CentOS:7.3:7.3.20170612 -y Linux --admin-username ${USERNAME} --admin-password ${PASSWORD}
+az image create --resource-group nak3labenv --name nak3testimage --os-type linux --source ${IMAGE_ID}
