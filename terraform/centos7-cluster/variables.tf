@@ -30,7 +30,6 @@ variable "unique_prefix" {
 
 variable "vm_admin_username" {
   description = "Specify an admin username that should be used to login to the VM. Min length: 1"
-  default     = "knakayam"
 }
 
 variable "vm_admin_password" {
@@ -142,11 +141,6 @@ variable "image_offer" {
 variable "image_sku" {
   description = "VM OS version. Allowed values: 6.5, 6.6"
   default     = "7.3"
-}
-
-variable "mysql_front_end_port_1" {
-  description = "MySQL public port"
-  default     = "3307"
 }
 
 variable "ssh_nat_rule_front_end_port_0" {
