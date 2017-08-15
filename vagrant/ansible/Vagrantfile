@@ -1,0 +1,38 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+
+  config.vm.provision "file", source: "~/.gitconfig", destination: ".gitconfig"
+
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.driver = "kvm"
+    libvirt.memory = 4096
+    #libvirt.cpus = 4
+  end
+
+  # Increase memory for Virtualbox
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+  end
+
+  # Increase memory for VMware
+  ["vmware_fusion", "vmware_workstation"].each do |p|
+    config.vm.provider p do |v|
+      v.vmx["memsize"] = "4096"
+    end
+  end
+
+#  config.vm.define :centos1 do | centos1 |
+#    config.vm.hostname = "centos1"
+#  end
+
+  config.vm.network "forwarded_port", guest: 80, host: 7777
+
+  config.vm.provision "ansible" do |ansible|
+#    ansible.limit = 'all'
+#    ansible.inventory_path = "hosts"
+    ansible.playbook = "provisioning/playbook.yaml"
+  end
+end
