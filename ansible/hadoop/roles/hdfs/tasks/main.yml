@@ -1,0 +1,48 @@
+## TODO: common ?
+- name: Install hdfs package
+  yum:
+    name: 
+    - hadoop-hdfs-namenode
+    - hadoop-hdfs-datanode
+    - hadoop-hdfs # client package
+    state: latest
+
+- name: Copy
+  copy:
+    src: hdfs-site.xml 
+    dest: /etc/hadoop/conf/hdfs-site.xml
+
+- name: Copy
+  copy:
+    src: core-site.xml 
+    dest: /etc/hadoop/conf.empty/core-site.xml
+
+- name: Start hdfs datanode
+  service:
+    name: hadoop-hdfs-datanode
+    state: started
+    enabled: true
+
+- name: Run script  
+  script: script.sh
+  register: result
+- debug:
+    var: result
+
+- name: Start hdfs namenode
+  service:
+    name: hadoop-hdfs-namenode
+    state: started
+    enabled: true
+
+- name: Restart hdfs datanode
+  service:
+    name: hadoop-hdfs-datanode
+    state: restarted
+    enabled: true
+
+- name: Restart hdfs namenode
+  service:
+    name: hadoop-hdfs-namenode
+    state: restarted
+    enabled: true

@@ -1,0 +1,29 @@
+## TODO: common ?
+- name: Enable clouder cdh5.repo
+  become: true
+  get_url:
+    url: http://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/cloudera-cdh5.repo
+    dest: /etc/yum.repos.d/cd5.repo
+
+- name: Install yarn package
+  yum:
+    name: 
+    - hadoop-yarn-resourcemanager
+    - hadoop-yarn-nodemanager
+    - hadoop-yarn
+      ## TODO: common ?
+    - spark-core
+    - java-1.8.0-openjdk
+    state: latest
+
+- name: Start yarn resourcemanager
+  service:
+    name: hadoop-yarn-resourcemanager
+    state: started
+    enabled: true
+
+- name: Start yarn nodemanager
+  service:
+    name: hadoop-yarn-nodemanager
+    state: started
+    enabled: true
