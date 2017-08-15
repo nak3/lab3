@@ -1,0 +1,40 @@
+- name: Install packages
+  yum:
+    state: installed
+    name: "{{ item }}"
+  with_items:
+    - unzip
+    - curl
+    - wget
+    - vim-minimal
+    - git
+    - make
+    - docker
+    - nbd
+    - strace
+    - lsof
+    - psmisc
+    - kernel-modules
+    - perf
+    # - golang
+    # - rkt
+    # - kernel-modules-extra
+    # - aoetools
+
+- name: copy 
+  copy: src=bash_profile dest=~/.bash_profile
+  become: False
+
+- name: go 1.8 install
+  script: go.sh
+  become: False
+  register: result
+- debug:
+    var: result
+
+- name: Run shell
+  script: install.sh
+  become: False
+  register: result
+- debug:
+    var: result

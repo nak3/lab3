@@ -1,0 +1,20 @@
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+        . ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/bin
+export PATH
+
+export PATH=$PATH:$GOPATH/bin
+export GOPATH=$HOME/work
+export GOBIN=$GOPATH/bin
+
+export PATH=$PATH:/usr/local/go/bin:$GOBIN:
+export PATH=$PATH:$GOPATH/src/github.com/alternative-storage/torus/bin
+
+alias cdtorus="cd $GOPATH/src/github.com/alternative-storage/torus"
