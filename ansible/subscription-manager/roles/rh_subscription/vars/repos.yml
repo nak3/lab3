@@ -1,0 +1,5 @@
+repos:
+- repo: rhel-7-server-rpms
+- repo: rhel-7-server-extras-rpms
+- repo: rhel-7-server-ose-3.6-rpms
+- repo: rhel-7-fast-datapath-rpms

@@ -1,0 +1,7 @@
+---
+- hosts: work
+  vars_files: 
+    - "roles/rh_subscription/vars/user.yml"
+    - "roles/rh_subscription/vars/repos.yml"
+  roles:
+    - rh_subscription 
