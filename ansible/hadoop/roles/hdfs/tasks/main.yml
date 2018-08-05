@@ -7,15 +7,23 @@
     - hadoop-hdfs # client package
     state: latest
 
-- name: Copy
+- name: Copy hdfs-site.xml
   copy:
     src: hdfs-site.xml 
     dest: /etc/hadoop/conf/hdfs-site.xml
 
-- name: Copy
+- name: Copy core-stie.xml
   copy:
     src: core-site.xml 
-    dest: /etc/hadoop/conf.empty/core-site.xml
+    #dest: /etc/hadoop/conf.empty/core-site.xml
+    dest: /etc/hadoop/conf/core-site.xml
+
+- name: Run init script
+  script: init.sh
+  ignore_errors: yes
+  register: result
+- debug:
+    var: result
 
 - name: Start hdfs datanode
   service:
@@ -23,17 +31,18 @@
     state: started
     enabled: true
 
-- name: Run script  
-  script: script.sh
-  register: result
-- debug:
-    var: result
-
 - name: Start hdfs namenode
   service:
     name: hadoop-hdfs-namenode
     state: started
     enabled: true
+
+- name: Run script
+  script: script.sh
+  ignore_errors: yes
+  register: result
+- debug:
+    var: result
 
 - name: Restart hdfs datanode
   service:
