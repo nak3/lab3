@@ -10,6 +10,6 @@ vagrant ssh-config --host cdh5 | sudo tee -a /root/.ssh/config
 
 // TODO: replace IP address
 echo "192.168.121.64 cdh5" | sudo tee -a /etc/hosts
-cd lab3/ansible/hdoop
+cd lab3/ansible/hadoop
 sudo ansible-playbook -i inventory site.yml
 ~~~
