@@ -1,0 +1,66 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$script = <<SCRIPT
+SCRIPT
+
+$script_root = <<SCRIPT_ROOT
+IPADDR=`hostname -I | cut -f1 -d' '`
+HOSTNAME=`hostname -f`
+echo "${IPADDR} ${HOSTNAME}" >> /etc/hosts
+
+yum -y update
+yum -y erase vim-minimal
+yum -y install sudo vim-enhanced
+yum install -y unzip curl wget vim-minimal golang git make docker strace lsof psmisc kernel-modules kernel-modules-extra aoetools perf java-1.8.0-openjdk
+mkdir /root/.ssh/
+cat /home/vagrant/.ssh/authorized_keys >> /root/.ssh/authorized_keys
+
+yum -y install smb samba-client samba-winbind cifs-utils
+systemctl start smb
+systemctl enable smb
+mkdir -p /srv/test
+chmod o+w /srv/test
+
+semanage fcontext -a -t samba_share_t '/srv/test(/.*)?'
+restorecon -R -v /srv/test
+
+echo "
+[test]
+path=/srv/test
+public=yes
+writable=yes
+browsable=yes" >> /etc/samba/smb.conf
+
+SCRIPT_ROOT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+
+  config.vm.provision "file", source: "~/.gitconfig", destination: ".gitconfig"
+
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.driver = "kvm"
+    libvirt.memory = 4096
+    libvirt.cpus = 4
+  end
+
+  config.vm.provision "shell", inline: $script, privileged: false
+  config.vm.provision "shell", inline: $script_root, privileged: true
+
+  # Increase memory for Virtualbox
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+  end
+
+  # Increase memory for VMware
+  ["vmware_fusion", "vmware_workstation"].each do |p|
+    config.vm.provider p do |v|
+      v.vmx["memsize"] = "4096"
+    end
+  end
+
+  config.vm.define :samba do | samba |
+    config.vm.hostname = "samba"
+  end
+end
