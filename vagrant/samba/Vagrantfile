@@ -16,7 +16,7 @@ yum install -y unzip curl wget vim-minimal golang git make docker strace lsof ps
 mkdir /root/.ssh/
 cat /home/vagrant/.ssh/authorized_keys >> /root/.ssh/authorized_keys
 
-yum -y install smb samba-client samba-winbind cifs-utils
+yum -y install samba samba-client samba-winbind cifs-utils
 systemctl start smb
 systemctl enable smb
 mkdir -p /srv/test
