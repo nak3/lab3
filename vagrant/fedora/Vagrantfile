@@ -1,0 +1,118 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$script = <<SCRIPT
+export PATH=$PATH:$GOPATH/bin
+export GOPATH=$HOME/work
+
+cat <<EOF >/home/vagrant/.bash_profile
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+	. ~/.bashrc
+fi
+
+# User specific environment and startup programs
+
+PATH=$PATH:$HOME/bin
+export PATH
+
+export PATH=$PATH:$GOPATH/bin
+export GOPATH=$HOME/work
+export GOBIN=$GOPATH/bin
+
+alias cdtorus="cd $GOPATH/src/github.com/coreos/torus"
+EOF
+
+#sudo yum -y update
+sudo yum install -y unzip curl wget vim-minimal golang git make docker rkt systemd-container nbd.x86_64 strace lsof psmisc kernel-modules kernel-modules-extra aoetools perf
+
+# use golang 1.8
+#sudo dnf install fedora-repos-rawhide
+#sudo dnf --enablerepo=rawhide update golang
+
+# end
+SCRIPT
+
+$script_root = <<SCRIPT_ROOT
+
+IPADDR=`hostname -I | cut -f1 -d' '`
+HOSTNAME=`hostname -f`
+echo "${IPADDR}	${HOSTNAME}" >> /etc/hosts
+
+yum -y erase vim-minimal
+yum -y install sudo vim-enhanced
+
+
+cd
+yum -y install kmod  patch  bash  sh-utils  tar  git bzip2  xz  findutils  gzip  m4  perl  perl-Carp  perl-devel  perl-generators  make  diffutils  gawk gcc  binutils  redhat-rpm-config  hmaccalc net-tools  hostname  bc  elfutils-devel openssl openssl-devel zlib-devel binutils-devel newt-devel python-devel perl bison flex xz-devel pciutils-devel gettext ncurses-devel
+
+yum -y install cmake glib2-devel libnl3-devel glusterfs-api-devel kmod-devel zlib-devel targetcli librbd-devel
+
+
+yum install -y docker
+systemctl enable docker && systemctl start docker
+
+cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-\$basearch
+enabled=1
+gpgcheck=1
+repo_gpgcheck=1
+gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+EOF
+setenforce 0
+yum install -y kubelet kubeadm kubectl
+systemctl enable kubelet && systemctl start kubelet
+
+cat <<EOF >  /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+sysctl --system
+
+#sed -i "s/cgroup-driver=systemd/cgroup-driver=cgroupfs/g" /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+systemctl daemon-reload
+systemctl restart kubelet
+
+# end
+SCRIPT_ROOT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "fedora/27-cloud-base"
+  config.vm.provision "shell", inline: $script, privileged: false
+  config.vm.provision "shell", inline: $script_root, privileged: true
+  config.vm.provision "docker" # Just install it
+
+  config.vm.provision "file", source: "~/.gitconfig", destination: ".gitconfig"
+
+  # Increase memory for Parallels Desktop
+  config.vm.provider "parallels" do |p, o|
+    p.memory = "4096"
+  end
+
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.driver = "kvm"
+    libvirt.memory = 4096
+    libvirt.cpus = 4
+  end
+
+  # Increase memory for Virtualbox
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+  end
+
+  # Increase memory for VMware
+  ["vmware_fusion", "vmware_workstation"].each do |p|
+    config.vm.provider p do |v|
+      v.vmx["memsize"] = "4096"
+    end
+  end
+
+  config.vm.define :dev do | dev |
+    config.vm.hostname = "dev"
+  end
+end

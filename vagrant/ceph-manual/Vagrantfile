@@ -1,0 +1,57 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$script = <<SCRIPT
+SCRIPT
+
+$script_root = <<SCRIPT_ROOT
+IPADDR=`hostname -I | cut -f1 -d' '`
+HOSTNAME=`hostname -f`
+echo "${IPADDR} ${HOSTNAME}" >> /etc/hosts
+
+yum -y update
+yum -y erase vim-minimal
+yum -y install sudo vim-enhanced
+yum install -y unzip curl wget vim-minimal golang git make docker systemd-container strace lsof psmisc kernel-modules kernel-modules-extra aoetools perf
+SCRIPT_ROOT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+
+  config.vm.provision "file", source: "~/.gitconfig", destination: ".gitconfig"
+
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.driver = "kvm"
+    libvirt.memory = 4096
+    libvirt.cpus = 4
+    libvirt.storage :file,
+#      :path => '',             # automatically chosen if unspecified!
+      :device => 'vdb', # automatically chosen if unspecified!
+      :size => '3G',            # defaults to 10G if unspecified!
+      :type => 'qcow2'          # defaults to 'qcow2' if unspecified!
+    libvirt.storage :file,
+#      :path => '',             # automatically chosen if unspecified!
+      :device => 'vdc', # automatically chosen if unspecified!
+      :size => '3G',            # defaults to 10G if unspecified!
+      :type => 'qcow2'          # defaults to 'qcow2' if unspecified!
+  end
+
+  config.vm.provision "shell", inline: $script, privileged: false
+  config.vm.provision "shell", inline: $script_root, privileged: true
+
+  # Increase memory for Virtualbox
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+  end
+
+  # Increase memory for VMware
+  ["vmware_fusion", "vmware_workstation"].each do |p|
+    config.vm.provider p do |v|
+      v.vmx["memsize"] = "4096"
+    end
+  end
+
+  config.vm.define :ceph do | ceph |
+    config.vm.hostname = "ceph"
+  end
+end

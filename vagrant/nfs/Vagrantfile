@@ -1,0 +1,65 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$script = <<SCRIPT
+SCRIPT
+
+$script_root = <<SCRIPT_ROOT
+IPADDR=`hostname -I | cut -f1 -d' '`
+HOSTNAME=`hostname -f`
+echo "${IPADDR} ${HOSTNAME}" >> /etc/hosts
+
+yum -y update
+yum -y erase vim-minimal
+yum -y install sudo vim-enhanced
+yum install -y unzip curl wget vim-minimal golang git make docker strace lsof psmisc kernel-modules kernel-modules-extra aoetools perf java-1.8.0-openjdk
+mkdir /root/.ssh/
+cat /home/vagrant/.ssh/authorized_keys >> /root/.ssh/authorized_keys
+
+yum -y install nfs-utils
+systemctl start nfs
+systemctl start rpcbind
+mkdir /nfs
+chmod 777 /nfs
+echo '/nfs *(rw,root_squash)' >> /etc/exports
+exportfs -a
+setsebool -P virt_use_nfs 1
+
+#firewall-cmd --add-service=nfs --permanent
+#firewall-cmd --add-service=mountd --permanent
+#firewall-cmd --add-service=rpc-bind --permanent
+#firewall-cmd --reload
+#firewall-cmd --list-all
+
+SCRIPT_ROOT
+
+Vagrant.configure(2) do |config|
+  config.vm.box = "centos/7"
+
+  config.vm.provision "file", source: "~/.gitconfig", destination: ".gitconfig"
+
+  config.vm.provider "libvirt" do |libvirt|
+    libvirt.driver = "kvm"
+    libvirt.memory = 4096
+    libvirt.cpus = 4
+  end
+
+  config.vm.provision "shell", inline: $script, privileged: false
+  config.vm.provision "shell", inline: $script_root, privileged: true
+
+  # Increase memory for Virtualbox
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+  end
+
+  # Increase memory for VMware
+  ["vmware_fusion", "vmware_workstation"].each do |p|
+    config.vm.provider p do |v|
+      v.vmx["memsize"] = "4096"
+    end
+  end
+
+  config.vm.define :nfs do | nfs |
+    config.vm.hostname = "nfs"
+  end
+end
