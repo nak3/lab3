@@ -1,0 +1,35 @@
+--- # file: firewalld.yml
+- hosts: all
+  remote_user: root
+  gather_facts: False
+
+  vars:
+    port: 80/tcp
+    state: enabled  # enabled: open, disabled: close
+    permanent: true  
+    immediate: true  
+
+  tasks:
+#    - name: check if firewalld is running
+#      command: systemctl is-active firewalld
+#      register: firewalld_result
+#      changed_when: False
+#      ignore_errors: True  # rc is 3 when firewalld is stopped
+    - name: enable and start httpd
+      service:
+        name: 'httpd'
+        state: started
+        enabled: yes
+
+    - name: set the port state
+      firewalld: 
+        permanent={{ permanent }}
+        port={{ port }} 
+        state={{ state }}
+        immediate={{ immediate }}
+#      notify: reload firewalld
+#      when: firewalld_result.stdout == "active"
+
+#  handlers:
+#    - name: reload firewalld
+##      service: name=firewalld state=restarted
